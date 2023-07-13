@@ -1,60 +1,32 @@
 <?php
 
+require 'utils/StringFormat.php';
+
 class Decoder
 {
     public static function seller($phrase)
     {
-        $array = explode('ç', $phrase);
-
-        $array[0] = preg_replace('/\s+/', '', $array[0]);
-        $array[2] = preg_replace('/\s+/', '', $array[2]);
-
-        return [
-            'cpf' => $array[0],
-            'name' => $array[1],
-            'salary' => $array[2]
-        ];
+        $keys = ['cpf', 'name', 'salary'];
+        return StringFormat::parseFields($phrase, $keys);
     }
 
     public static function client($phrase)
     {
-        $array = explode('ç', $phrase);
-
-        $array[0] = preg_replace('/\s+/', '', $array[0]);
-        $array[2] = preg_replace('/\s+/', '', $array[2]);
-
-        return [
-            'cnpj' => $array[0],
-            'name' => $array[1],
-            'lineOfBusiness' => $array[2]
-        ];
+        $keys = ['cnpj', 'name', 'lineOfBusiness'];
+        return StringFormat::parseFields($phrase, $keys);
     }
 
-    public static function sale($phrase)
+    public static function parseItemList($bracketsContent)
     {
-        // Separa os elementos entre colchetes
-        preg_match('/\[(.*?)\]/', $phrase, $bracketsMatches);
-        $bracketsContent = $bracketsMatches[1];
-
-        // Separa os elementos fora dos colchetes
-        $outsideBrackets = explode('ç', preg_replace('/\[(.*?)\]/', '', $phrase));
-
-        if ($outsideBrackets[2]) {
-            $outsideBrackets[1] = $outsideBrackets[2];
-            unset($outsideBrackets[2]);
-        }
-
-        // Separa os elementos dentro dos colchetes
         $insideBrackets = array_map('trim', explode(',', $bracketsContent));
 
         $list = [];
-
+        $total = 0;
         foreach ($insideBrackets as $val) {
             $itemList = explode('-', $val);
+            $itemList = array_map([StringFormat::class, 'cleanSpaces'], $itemList);
 
-            $itemList = array_map(function ($item) {
-                return preg_replace('/\s+/', '', $item);
-            }, $itemList);
+            $total += $itemList[2];
 
             $list[] = [
                 'itemId' => $itemList[0],
@@ -63,10 +35,26 @@ class Decoder
             ];
         }
 
-        // Combina os elementos em um array final
+        $list['total'] = $total;
+
+        return $list;
+    }
+
+    public static function sale($phrase)
+    {
+        preg_match('/\[(.*?)\]/', $phrase, $bracketsMatches);
+        $bracketsContent = $bracketsMatches[1];
+
+        $outsideBrackets = explode('ç', preg_replace('/\[(.*?)\]/', '', $phrase));
+
+        if ($outsideBrackets[2]) {
+            $outsideBrackets[1] = $outsideBrackets[2];
+            unset($outsideBrackets[2]);
+        }
+
         $result = [
-            'sellerId' => trim($outsideBrackets[0]),
-            'itemList' => $list,
+            'saleId' => trim($outsideBrackets[0]),
+            'itemList' => self::parseItemList($bracketsContent),
             'sellerName' => trim($outsideBrackets[1])
         ];
 
