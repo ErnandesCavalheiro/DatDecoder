@@ -86,7 +86,7 @@ class FileWatcher
                 'Nome do pior vendedor: '.$worstSeller
             ];
 
-            (new File('', ''))->createAndWriteDatFile($date.'-'.$this->numFiles, $lines);
+            (new File('', ''))->createAndWriteDatFile('relatorio.done', $lines);
             
             sleep(10);
         }
