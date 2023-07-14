@@ -78,7 +78,6 @@ class FileWatcher
             $totalSellers = AnalyzeData::countSellers($array);
             $worstSeller = AnalyzeData::worstSeller($array);
 
-            $date = date('y-m-d');
             $lines = [
                 'Total de clientes: '.$totalClients,
                 'Total de vendedores: '.$totalSellers,
