@@ -1,5 +1,5 @@
 <?php
 
-require 'src/utils/FileWatcher.php';
+require 'src/FileWatcher.php';
 
 (new FileWatcher())->watchDir();
